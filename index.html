@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sustained!</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a courtroom stage (bench + jury box) above a court-reporter transcript strip; one big red OBJECTION control. */
+:root{
+  --bg:#edefe9; --paper:#f8f7f2; --fg:#1d221e; --muted:#5f6660; --line:#c9cec4;
+  --wood:#6b4226; --wood2:#8a5a35; --brass:#a4762a; --red:#b3261e; --green:#2f6b3a; --amber:#b8860b;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  --body:"Source Serif 4",Georgia,serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#151817; --paper:#1f2321; --fg:#e8e5da; --muted:#9aa09a; --line:#39403b;
+  --wood:#4a2d1a; --wood2:#7a4e2c; --brass:#d2a34e; --red:#d8463c; --green:#5fb06b; --amber:#e0a93a; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#151817; --paper:#1f2321; --fg:#e8e5da; --muted:#9aa09a; --line:#39403b;
+  --wood:#4a2d1a; --wood2:#7a4e2c; --brass:#d2a34e; --red:#d8463c; --green:#5fb06b; --amber:#e0a93a; color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
+.wrap{max-width:980px;margin:0 auto;padding-block:14px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+button{font:inherit;cursor:pointer;color:inherit}
+button:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.hidden{display:none!important}
+
+/* top bar */
+.bar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--wood);padding-bottom:8px;margin-bottom:12px}
+.caption{font-family:var(--display);font-weight:600;font-size:1.05rem}
+.caption small{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:400}
+.stats{display:flex;gap:16px;font-family:var(--mono);font-size:.85rem;font-variant-numeric:tabular-nums}
+.stats b{font-weight:600}
+
+/* stage */
+.stage{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:640px){.stage{grid-template-columns:1fr}}
+.panel h3{font-size:.8rem;font-family:var(--mono);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between}
+.meter{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:var(--green);transition:width .4s,background .4s}
+.bench{display:flex;gap:12px;align-items:center}
+.bench svg{width:92px;height:92px;flex:none}
+.benchnote{font-size:.9rem;color:var(--muted);font-style:italic;min-height:2.6em}
+.jury{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;background:var(--wood);padding:8px;border-radius:4px;border-bottom:6px solid var(--wood2)}
+.juror{aspect-ratio:1;position:relative}
+.juror svg{width:100%;height:100%}
+.juror .zz{position:absolute;top:-4px;right:0;font-family:var(--mono);font-size:.7rem;color:#fff;opacity:0;transition:opacity .3s}
+.juror.asleep .zz{opacity:1;animation:zz 1.6s infinite}
+@keyframes zz{0%{transform:translateY(0)}100%{transform:translateY(-6px);opacity:.2}}
+
+/* transcript */
+.transcript{margin-top:14px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:16px 18px;position:relative;min-height:150px}
+.transcript .num{font-family:var(--mono);font-size:.75rem;color:var(--muted);position:absolute;left:18px;top:14px}
+.speaker{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brass);margin-top:16px}
+.linetext{font-size:1.22rem;line-height:1.4;margin-top:4px;max-width:62ch}
+.linetext.q{font-weight:600}
+.linetext.a{font-style:italic}
+.timer{height:5px;background:var(--line);margin-top:14px;border-radius:3px;overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:var(--brass);transform-origin:left}
+.ruling{font-family:var(--mono);font-size:.85rem;margin-top:10px;min-height:1.4em}
+.ruling b{font-weight:600}
+
+/* controls */
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.objection{font-family:var(--display);font-weight:900;font-size:1.6rem;letter-spacing:.02em;background:var(--red);color:#fff;border:0;border-radius:8px;padding:14px 34px;box-shadow:0 4px 0 #6d1510;transition:transform .08s}
+.objection:active{transform:translateY(3px);box-shadow:0 1px 0 #6d1510}
+.objection:disabled{opacity:.45;cursor:default}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:6px;padding:8px 14px;font-size:.9rem}
+.ghost:hover{border-color:var(--brass)}
+.hint{font-size:.85rem;color:var(--muted)}
+
+/* grounds overlay */
+.grounds{margin-top:14px;background:var(--paper);border:2px solid var(--red);border-radius:6px;padding:14px}
+.grounds h3{font-size:1.1rem;margin-bottom:10px}
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.ground{text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.ground:hover{border-color:var(--brass)}
+.ground b{display:block;font-family:var(--display);font-weight:600}
+.ground small{font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+
+/* splash */
+.splash{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;z-index:10}
+.splash span{font-family:var(--display);font-weight:900;font-size:clamp(2.6rem,10vw,6.5rem);letter-spacing:.02em;color:#fff;background:var(--red);padding:.1em .35em;transform:rotate(-6deg) scale(.6);opacity:0;box-shadow:8px 8px 0 #000}
+.splash span.go{animation:pop .9s ease-out forwards}
+.splash span.green{background:var(--green)}
+.splash span.amber{background:var(--amber);color:#1d221e}
+.splash span.dark{background:#1d221e}
+@keyframes pop{0%{transform:rotate(-6deg) scale(.6);opacity:0}15%{transform:rotate(-6deg) scale(1.08);opacity:1}30%{transform:rotate(-6deg) scale(1)}80%{opacity:1}100%{opacity:0}}
+.blackout{position:fixed;inset:0;background:#000;z-index:9;opacity:0;pointer-events:none;transition:opacity .25s}
+.blackout.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.splash span.go{animation:none;opacity:1;transform:rotate(-6deg)}.juror.asleep .zz{animation:none}}
+
+/* start / end screens */
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:22px 24px;max-width:72ch}
+.sheet h1{font-size:clamp(2rem,6vw,3.2rem);font-weight:900;line-height:1}
+.sheet h2{font-size:1.25rem;margin-top:18px}
+.sheet p{margin:.6em 0}
+.brief{font-family:var(--mono);font-size:.85rem;border-left:3px solid var(--brass);padding-left:12px;margin:14px 0}
+.brief div{margin:2px 0}
+.primary{background:var(--wood);color:#fff;border:0;border-radius:6px;padding:12px 22px;font-family:var(--display);font-weight:600;font-size:1.1rem;margin-top:14px}
+.primary:hover{background:var(--wood2)}
+.scoreline{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin:14px 0}
+.scoreline div{border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:.8rem}
+.scoreline b{display:block;font-family:var(--display);font-size:1.6rem;font-weight:900;font-variant-numeric:tabular-nums}
+.grade{font-family:var(--display);font-size:4rem;font-weight:900;line-height:1}
+.review{list-style:none;padding:0;margin:10px 0}
+.review li{padding:8px 0;border-top:1px solid var(--line);font-size:.95rem}
+.review .tag{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:3px;color:#fff;margin-right:6px}
+.tag.ok{background:var(--green)}.tag.bad{background:var(--red)}.tag.meh{background:var(--amber);color:#1d221e}
+.cite{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.rules{margin-top:10px}
+.rules li{margin:4px 0}
+details summary{cursor:pointer;font-family:var(--mono);font-size:.85rem;color:var(--muted);margin-top:10px}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="caption">Castillo v. Pelican Bay Marina, LLC<small>Circuit Court · Seventh Judicial Circuit · Volusia County, Florida</small></div>
+    <div class="stats"><span>Score <b id="score">0</b></span><span>Streak <b id="streak">0</b></span><span id="clock">9:00 AM</span></div>
+  </div>
+
+  <!-- START -->
+  <section id="start" class="sheet">
+    <h1>Sustained!</h1>
+    <p>You are defense counsel for Pelican Bay Marina. Plaintiff's counsel is examining her witnesses, and some of her questions are improper under the Florida Evidence Code. Catch them.</p>
+    <div class="brief">
+      <div>CASE: Castillo v. Pelican Bay Marina, LLC (negligence)</div>
+      <div>CLAIM: A boat lift in slip 14 failed on June 3, dropping plaintiff's boat into the Intracoastal.</div>
+      <div>JUDGE: Hon. Marguerite Delacroix. Patience: finite. Lunch: 11:30.</div>
+      <div>YOUR JOB: Object when a question is improper, and name the right ground.</div>
+    </div>
+    <h2>How it plays</h2>
+    <p>Each line of testimony is live for a few seconds. Hit <b>OBJECTION!</b> and pick a ground. The right ground gets <b>Sustained</b> and points. The wrong ground gets <b>Overruled</b> and costs the judge's patience. Objecting to a perfectly good question is frivolous, and the judge remembers. Let a bad question slide and the jury dozes off.</p>
+    <p>Three sustained in a row and opposing counsel starts to sweat. Keep the judge's patience above zero or you are in contempt.</p>
+    <button class="primary" id="begin">Begin Trial</button>
+    <details><summary>The grounds (Florida Evidence Code, Ch. 90)</summary><ul class="rules" id="rulesList"></ul></details>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="hidden">
+    <div class="stage">
+      <div class="panel">
+        <h3><span>The Bench</span><span id="moodLabel">Patience 70</span></h3>
+        <div class="bench">
+          <svg id="judge" viewBox="0 0 100 100" aria-hidden="true">
+            <rect x="8" y="70" width="84" height="26" fill="#3a2414"/>
+            <rect x="30" y="40" width="40" height="34" rx="6" fill="#1a1a1a"/>
+            <circle cx="50" cy="38" r="17" fill="#e8c39e"/>
+            <path d="M33 30 q17 -16 34 0 v6 h-34z" fill="#8c8c8c"/>
+            <circle cx="43" cy="37" r="2.2" fill="#222"/><circle cx="57" cy="37" r="2.2" fill="#222"/>
+            <path id="mouth" d="M43 47 q7 4 14 0" stroke="#222" stroke-width="2" fill="none"/>
+            <path id="brows" d="M38 31 l9 0 M53 31 l9 0" stroke="#222" stroke-width="2"/>
+            <rect x="72" y="60" width="18" height="6" rx="2" fill="#7a4e2c"/><rect x="82" y="52" width="5" height="12" rx="2" fill="#7a4e2c"/>
+          </svg>
+          <div><div class="meter"><i id="moodBar" style="width:70%"></i></div><div class="benchnote" id="benchnote">Judge Delacroix is settled in. Coffee is fresh.</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3><span>Jury Box</span><span id="attnLabel">Attention 80</span></h3>
+        <div class="jury" id="jury"></div>
+        <div class="meter"><i id="attnBar" style="width:80%"></i></div>
+      </div>
+    </div>
+
+    <div class="transcript">
+      <span class="num" id="lineNum">1</span>
+      <div class="speaker" id="speaker">—</div>
+      <div class="linetext" id="linetext"></div>
+      <div class="timer"><i id="timerBar"></i></div>
+      <div class="ruling" id="ruling"></div>
+    </div>
+
+    <div class="controls">
+      <button class="objection" id="objBtn">OBJECTION!</button>
+      <button class="ghost" id="pauseBtn">Pause</button>
+      <span class="hint">Space = object · Enter = next</span>
+    </div>
+
+    <div class="grounds hidden" id="grounds">
+      <h3>On what ground, counsel?</h3>
+      <div class="ggrid" id="ggrid"></div>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section id="end" class="sheet hidden">
+    <h1 id="endTitle">Court is in recess.</h1>
+    <div class="grade" id="grade">B</div>
+    <p id="verdict"></p>
+    <div class="scoreline">
+      <div>Score<b id="fScore">0</b></div><div>Sustained<b id="fSus">0</b></div><div>Overruled<b id="fOver">0</b></div><div>Frivolous<b id="fFriv">0</b></div><div>Missed<b id="fMiss">0</b></div>
+    </div>
+    <h2>Review of the record</h2>
+    <ul class="review" id="review"></ul>
+    <button class="primary" id="again">Retry the Trial</button>
+  </section>
+</div>
+
+<div class="splash"><span id="splash"></span></div>
+<div class="blackout" id="blackout"></div>
+
+<script>
+// ---------- data ----------
+const GROUNDS = {
+  hearsay:{name:"Hearsay",cite:"§ 90.801–90.803",desc:"An out-of-court statement offered to prove the truth of the matter asserted."},
+  leading:{name:"Leading",cite:"§ 90.612(3)",desc:"On direct examination, a question that suggests its own answer."},
+  relevance:{name:"Relevance / Prejudice",cite:"§ 90.401–90.403",desc:"Not probative of a fact in issue, or unfairly prejudicial."},
+  speculation:{name:"Speculation",cite:"§ 90.604",desc:"Calls for a guess, or for facts outside the witness's personal knowledge."},
+  foundation:{name:"Lack of Foundation",cite:"§ 90.901",desc:"Document or testimony not yet authenticated or qualified."},
+  argumentative:{name:"Argumentative",cite:"§ 90.612(1)",desc:"Counsel is arguing with the witness rather than asking a question."},
+  asked:{name:"Asked and Answered",cite:"§ 90.612(1)",desc:"The question has already been asked and answered."},
+  compound:{name:"Compound",cite:"§ 90.612(1)",desc:"Several questions bundled into one; the answer can't be clear."}
+};
+const C="Ms. Whitlock (Plaintiff's counsel)", W1="Ms. Castillo (Witness)", W2="Mr. Brandt (Witness)";
+const LINES = [
+ {s:C,q:1,t:"Please state your name for the record."},
+ {s:W1,t:"Rosa Castillo."},
+ {s:C,q:1,t:"Ms. Castillo, where do you keep your boat?"},
+ {s:W1,t:"Slip 14 at Pelican Bay Marina, on the Intracoastal in Edgewater."},
+ {s:C,q:1,t:"And the marina's lift was rusted and badly maintained, wasn't it?",ok:["leading"],why:"On direct, counsel can't put the answer in the witness's mouth. 'Wasn't it?' is a classic leading tag."},
+ {s:C,q:1,t:"Let me rephrase. What did you observe about the condition of the lift?"},
+ {s:W1,t:"The cables looked frayed. My neighbor in slip 15 told me the dockhand said they'd been meaning to replace them.",ok:["hearsay"],why:"Double hearsay: what the dockhand said, relayed by the neighbor, offered for its truth. No exception applies."},
+ {s:C,q:1,t:"What did you see on the morning of June 3rd?"},
+ {s:W1,t:"I was walking down the dock, I heard a crack, and the boat dropped maybe four feet into the water."},
+ {s:C,q:1,t:"What do you think the dockhand was thinking when he set the lift that morning?",ok:["speculation"],why:"No witness can testify to what someone else was thinking. Lay testimony is limited to personal knowledge."},
+ {s:C,q:1,t:"How much did your repairs cost, and who paid for them, and when did you get the boat back?",ok:["compound"],why:"Three questions in one. A single 'yes' or number answers none of them clearly."},
+ {s:C,q:1,t:"What did your repairs cost?"},
+ {s:W1,t:"$18,400, at the service yard in New Smyrna."},
+ {s:C,q:1,t:"Isn't it true the marina's owner drives a Porsche and vacations in Aspen?",ok:["relevance","leading"],why:"The owner's wealth has nothing to do with whether the lift was negligently maintained, and it's unfairly prejudicial. (Leading too.)"},
+ {s:C,q:1,t:"You've already told us the lift was defective, so why would anyone with a conscience keep it in service?",ok:["argumentative"],why:"That's a closing argument, not a question. Counsel is arguing with the witness and the jury at once."},
+ {s:C,q:1,t:"What was the condition of the lift?",ok:["asked"],why:"The witness answered this at line 6. Repetition wastes the court's time and emphasizes testimony unfairly."},
+ {s:C,q:1,t:"Did you take photographs that day?"},
+ {s:W1,t:"Yes, on my phone."},
+ {s:C,q:1,t:"I'm showing you what's marked Plaintiff's Exhibit 4, a 2023 inspection report. What does the report conclude?",ok:["foundation","hearsay"],why:"Nobody has authenticated the report or shown this witness can speak to it. (And its contents are hearsay unless the business-records exception is laid.)"},
+ {s:C,q:1,t:"I'll lay the foundation, Your Honor. Ms. Castillo, do you recognize these photographs?"},
+ {s:W1,t:"Yes. I took them that morning, right after the boat went in."},
+ {s:C,q:1,t:"What do they show?"},
+ {s:W1,t:"The boat half in the water, and the snapped cable hanging off the lift."},
+ {s:C,q:1,t:"Nothing further. Plaintiff calls Tyler Brandt.",sw:"Dockhand Tyler Brandt takes the stand."},
+ {s:C,q:1,t:"Mr. Brandt, how long have you worked at Pelican Bay?"},
+ {s:W2,t:"About three years."},
+ {s:C,q:1,t:"And you had never once inspected that lift, had you?",ok:["leading"],why:"Suggests the answer on direct. Counsel called this witness; she can't lead him unless the court declares him adverse."},
+ {s:C,q:1,t:"When did you last inspect the lift in slip 14?"},
+ {s:W2,t:"The Friday before. I log every inspection."},
+ {s:W2,t:"Honestly, my buddy at the boatyard across the river says every marina on the Intracoastal cuts corners.",ok:["hearsay","relevance"],why:"An out-of-court statement by the buddy, offered for its truth, about marinas generally. Hearsay, and irrelevant besides."},
+ {s:C,q:1,t:"Mr. Brandt, have you ever been arrested?",ok:["relevance"],why:"An arrest proves nothing about this lift, and it's unfairly prejudicial. Only certain convictions can impeach, and only in a limited way."},
+ {s:C,q:1,t:"If the cable had been replaced in 2024, would the boat have fallen?",ok:["speculation"],why:"Asks a lay witness to guess at a hypothetical. That's expert territory, with a foundation he doesn't have."},
+ {s:C,q:1,t:"What did you do immediately after you heard the crack?"},
+ {s:W2,t:"I hit the emergency stop and ran to slip 14."},
+ {s:C,q:1,t:"So you ran. Was that before or after you finished your coffee, and did you call anyone, and what time was it?",ok:["compound"],why:"Three questions stacked into one. The record can't tell which part the answer addresses."},
+ {s:C,q:1,t:"What time was it?"},
+ {s:W2,t:"About 7:40 in the morning."},
+ {s:C,q:1,t:"You keep saying you log inspections. Where is the log?"},
+ {s:W2,t:"In the office binder. I brought it with me."},
+ {s:C,q:1,t:"You'd agree with me that you're the kind of employee who cuts corners, aren't you?",ok:["argumentative","leading"],why:"Badgering the witness with counsel's characterization. Argumentative, and leading on top of it."},
+ {s:C,q:1,t:"What time was it when you heard the crack?",ok:["asked"],why:"He already said 7:40. Asked and answered."},
+ {s:C,q:1,t:"Nothing further, Your Honor.",end:true}
+];
+const EVENTS=[
+ {t:"A juror's phone goes off. The ringtone is a Jimmy Buffett song.",attn:-8,mood:-6,splash:"PHONE",cls:"amber"},
+ {t:"The air conditioning fails. It is 94° outside and the jury knows it.",attn:-14,mood:-10,splash:"A/C FAILS",cls:"amber"},
+ {t:"Power outage. The courtroom goes dark for a moment. Everyone wakes up.",attn:+12,mood:0,black:true},
+ {t:"A pelican lands on the windowsill and stares at juror #4.",attn:+10,mood:0,splash:"PELICAN",cls:"green"},
+ {t:"The judge calls a five-minute recess. Coffee is replenished.",attn:+6,mood:+14,splash:"RECESS",cls:"green"},
+ {t:"The court reporter asks counsel to slow down. Counsel does not.",attn:-3,mood:-3}
+];
+
+// ---------- state ----------
+let S;
+function fresh(){ return {i:0,score:0,streak:0,best:0,mood:70,attn:80,minutes:0,sus:0,over:0,friv:0,miss:0,log:[],objecting:false,paused:false,done:false,decided:false}; }
+const $=id=>document.getElementById(id);
+let timerId=null, timerStart=0, timerLen=0, timerLeft=0;
+
+// ---------- audio ----------
+let AC=null;
+function beep(type){
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const t=AC.currentTime;
+    if(type==="gavel"){ for(let k=0;k<2;k++){ const o=AC.createOscillator(),g=AC.createGain(); o.type="square"; o.frequency.setValueAtTime(180,t+k*.14); o.frequency.exponentialRampToValueAtTime(60,t+k*.14+.1); g.gain.setValueAtTime(.4,t+k*.14); g.gain.exponentialRampToValueAtTime(.001,t+k*.14+.12); o.connect(g).connect(AC.destination); o.start(t+k*.14); o.stop(t+k*.14+.13);} }
+    else if(type==="obj"){ const o=AC.createOscillator(),g=AC.createGain(); o.type="sawtooth"; o.frequency.setValueAtTime(220,t); o.frequency.exponentialRampToValueAtTime(660,t+.18); g.gain.setValueAtTime(.3,t); g.gain.exponentialRampToValueAtTime(.001,t+.4); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+.4); }
+    else if(type==="bad"){ const o=AC.createOscillator(),g=AC.createGain(); o.type="triangle"; o.frequency.setValueAtTime(300,t); o.frequency.exponentialRampToValueAtTime(120,t+.35); g.gain.setValueAtTime(.3,t); g.gain.exponentialRampToValueAtTime(.001,t+.4); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+.4); }
+  }catch(e){}
+}
+
+// ---------- ui helpers ----------
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function splash(text,cls){ const el=$("splash"); el.className=""; el.textContent=text; void el.offsetWidth; el.className="go "+(cls||""); }
+function setMood(v){ S.mood=clamp(v,0,100); $("moodBar").style.width=S.mood+"%"; $("moodBar").style.background=S.mood>55?"var(--green)":S.mood>25?"var(--amber)":"var(--red)"; $("moodLabel").textContent="Patience "+Math.round(S.mood);
+  const m=$("mouth"),b=$("brows");
+  if(S.mood>60){m.setAttribute("d","M43 47 q7 4 14 0");b.setAttribute("d","M38 31 l9 0 M53 31 l9 0");}
+  else if(S.mood>30){m.setAttribute("d","M43 48 l14 0");b.setAttribute("d","M38 30 l9 2 M53 32 l9 -2");}
+  else {m.setAttribute("d","M43 50 q7 -5 14 0");b.setAttribute("d","M38 28 l9 4 M53 32 l9 -4");}
+  if(S.mood<=0&&!S.done) endGame(true);
+}
+function setAttn(v){ S.attn=clamp(v,0,100); $("attnBar").style.width=S.attn+"%"; $("attnBar").style.background=S.attn>50?"var(--green)":S.attn>25?"var(--amber)":"var(--red)"; $("attnLabel").textContent="Attention "+Math.round(S.attn);
+  const asleep=Math.round((100-S.attn)/100*12); document.querySelectorAll(".juror").forEach((j,k)=>j.classList.toggle("asleep",k<asleep)); }
+function clock(){ const total=9*60+S.minutes; const h=Math.floor(total/60),m=total%60; $("clock").textContent=((h+11)%12+1)+":"+String(m).padStart(2,"0")+(h<12?" AM":" PM"); }
+function hungry(){ return S.minutes>=150; }
+function stats(){ $("score").textContent=S.score; $("streak").textContent=S.streak; }
+function note(t){ $("benchnote").textContent=t; }
+function ruling(html){ $("ruling").innerHTML=html; }
+
+function buildJury(){ const j=$("jury"); j.innerHTML=""; const tones=["#e8c39e","#c68642","#8d5524","#f1d5b8","#5c3a21","#d9a877"]; for(let k=0;k<12;k++){ const d=document.createElement("div"); d.className="juror"; d.innerHTML=`<svg viewBox="0 0 40 40"><rect x="6" y="26" width="28" height="14" rx="4" fill="${["#44546a","#6b3f2a","#2f4f4f","#7a6b4f"][k%4]}"/><circle cx="20" cy="16" r="10" fill="${tones[k%6]}"/><circle cx="16.5" cy="15" r="1.3" fill="#222"/><circle cx="23.5" cy="15" r="1.3" fill="#222"/></svg><span class="zz">zz</span>`; j.appendChild(d);} }
+function buildGrounds(){ const g=$("ggrid"); g.innerHTML=""; Object.entries(GROUNDS).forEach(([k,v])=>{ const b=document.createElement("button"); b.className="ground"; b.innerHTML=`<b>${v.name}</b><small>${v.cite}</small>`; b.onclick=()=>rule(k); g.appendChild(b);});
+  const r=$("rulesList"); r.innerHTML=""; Object.values(GROUNDS).forEach(v=>{ const li=document.createElement("li"); li.innerHTML=`<b>${v.name}</b> <span class="cite">${v.cite}</span> — ${v.desc}`; r.appendChild(li);}); }
+
+// ---------- game flow ----------
+function startGame(){ S=fresh(); $("start").classList.add("hidden"); $("end").classList.add("hidden"); $("game").classList.remove("hidden"); buildJury(); setMood(70); setAttn(80); stats(); clock(); showLine(); }
+
+function showLine(){
+  const L=LINES[S.i]; if(!L){endGame(false);return;}
+  S.decided=false; S.objecting=false; $("grounds").classList.add("hidden"); $("objBtn").disabled=false;
+  $("lineNum").textContent=S.i+1; $("speaker").textContent=L.s; $("linetext").textContent=L.t; $("linetext").className="linetext "+(L.q?"q":"a"); ruling("");
+  if(L.sw) note(L.sw);
+  if(L.end){ $("objBtn").disabled=true; ruling("<b>THE COURT:</b> Thank you, counsel. We'll be in recess."); setTimeout(()=>endGame(false),1800); return; }
+  timerLen=clamp(3200+L.t.length*42,3800,8500); timerLeft=timerLen; runTimer();
+}
+function runTimer(){ clearTimeout(timerId); timerStart=performance.now(); const bar=$("timerBar"); bar.style.transition="none"; bar.style.transform=`scaleX(${timerLeft/timerLen})`; void bar.offsetWidth; bar.style.transition=`transform ${timerLeft}ms linear`; bar.style.transform="scaleX(0)"; timerId=setTimeout(expire,timerLeft); }
+function pauseTimer(){ clearTimeout(timerId); timerLeft=Math.max(0,timerLeft-(performance.now()-timerStart)); const bar=$("timerBar"); const cur=getComputedStyle(bar).transform; bar.style.transition="none"; bar.style.transform=cur; }
+function expire(){ if(S.done||S.decided)return; const L=LINES[S.i]; S.decided=true;
+  if(L.ok){ S.miss++; S.streak=0; setAttn(S.attn-10*(hungry()?1.5:1)); S.log.push({i:S.i,r:"miss"}); ruling(`<b>Admitted.</b> That was objectionable (${GROUNDS[L.ok[0]].name}). The jury heard it.`); $("objBtn").disabled=true; stats(); setTimeout(advance,1500); }
+  else advance(); }
+function advance(){ if(S.done)return; S.i++; S.minutes+=2; clock(); if(hungry()&&S.minutes<154) note("11:30. The judge glances at the clock. Rulings get sharper on an empty stomach.");
+  if(S.i%7===4&&Math.random()<.85) wildcard(()=>showLine()); else showLine(); }
+function wildcard(cb){ const E=EVENTS[Math.floor(Math.random()*EVENTS.length)]; note(E.t); if(E.splash) splash(E.splash,E.cls); if(E.black){ $("blackout").classList.add("on"); setTimeout(()=>$("blackout").classList.remove("on"),1600);} setAttn(S.attn+E.attn); setMood(S.mood+E.mood); setTimeout(cb,E.black?2000:1400); }
+
+function object(){ if(S.done||S.decided||S.objecting)return; const L=LINES[S.i]; if(L.end)return; S.objecting=true; pauseTimer(); beep("obj"); splash("OBJECTION!"); $("grounds").classList.remove("hidden"); $("objBtn").disabled=true; }
+function rule(k){ if(!S.objecting)return; const L=LINES[S.i]; S.objecting=false; S.decided=true; $("grounds").classList.add("hidden"); const pen=hungry()?1.5:1;
+  if(L.ok&&L.ok.includes(k)){ S.sus++; S.streak++; S.best=Math.max(S.best,S.streak); const mult=1+Math.min(S.streak-1,4)*.25; const pts=Math.round(100*mult); S.score+=pts; setMood(S.mood+6); setAttn(S.attn+8); S.log.push({i:S.i,r:"sus",k});
+    beep("gavel"); splash("SUSTAINED",S.streak>=3?"dark":"green"); ruling(`<b>THE COURT:</b> Sustained. <span class="cite">${GROUNDS[k].name}, ${GROUNDS[k].cite}. +${pts}</span>`);
+    if(S.streak===3) setTimeout(()=>{splash("COUNSEL SWEATS","amber"); note("Ms. Whitlock loosens her collar and reaches for the water pitcher.");},1000);
+    if(S.streak===5) setTimeout(()=>{splash("THE JURY IS YOURS","dark"); note("Juror #7 nods at you. Juror #2 appears to be taking notes on your technique.");},1000);
+    if(S.streak===3||S.streak===5) setAttn(S.attn+10);
+  } else if(L.ok){ S.over++; S.streak=0; setMood(S.mood-12*pen); S.log.push({i:S.i,r:"over",k}); beep("bad"); splash("OVERRULED","dark");
+    ruling(`<b>THE COURT:</b> Overruled. <span class="cite">That wasn't ${GROUNDS[k].name.toLowerCase()}. It was ${GROUNDS[L.ok[0]].name.toLowerCase()} (${GROUNDS[L.ok[0]].cite}). The answer stands.</span>`);
+  } else { S.friv++; S.streak=0; setMood(S.mood-16*pen); setAttn(S.attn-4); S.log.push({i:S.i,r:"friv",k}); beep("bad"); splash("OVERRULED","dark");
+    const snark=["Counsel, that was a question. Those are allowed.","Overruled. Counsel, I'm going to start charging you for these.","Overruled. Sit down, counsel.","Overruled. The witness may answer, and counsel may reflect."];
+    ruling(`<b>THE COURT:</b> ${snark[S.friv%snark.length]}`); }
+  stats(); setTimeout(advance,2200); }
+
+function togglePause(){ if(S.done||S.decided||S.objecting)return; S.paused=!S.paused; $("pauseBtn").textContent=S.paused?"Resume":"Pause"; if(S.paused) pauseTimer(); else runTimer(); }
+function skip(){ if(S.done||S.objecting||S.paused)return; if(!S.decided){ clearTimeout(timerId); expire(); } }
+
+function endGame(contempt){ if(S.done)return; S.done=true; clearTimeout(timerId); $("game").classList.add("hidden"); $("end").classList.remove("hidden");
+  const total=LINES.filter(l=>l.ok).length; const acc=S.sus/total;
+  let grade="F",v="";
+  if(contempt){ grade="CONTEMPT"; v="The judge has had enough. Bailiff, remove counsel. You'll be hearing from the Florida Bar."; $("endTitle").textContent="Held in contempt."; }
+  else { $("endTitle").textContent="Court is in recess."; grade=acc>=.9&&S.friv<=1?"A":acc>=.75?"B":acc>=.55?"C":acc>=.35?"D":"F";
+    v={A:"Opposing counsel asks if you'd consider lateral partnership. You decline, graciously.",B:"A clean afternoon. A few got past you, but the record is in good shape for appeal.",C:"Serviceable. The jury heard some things they shouldn't have, and the judge noticed your guesswork.",D:"The record is a mess. Plaintiff's counsel sends you a fruit basket.",F:"You objected to the witness's name. Your client is looking for new counsel."}[grade]; }
+  $("grade").textContent=grade; $("verdict").textContent=v; $("fScore").textContent=S.score; $("fSus").textContent=S.sus; $("fOver").textContent=S.over; $("fFriv").textContent=S.friv; $("fMiss").textContent=S.miss;
+  const rv=$("review"); rv.innerHTML="";
+  LINES.forEach((L,i)=>{ if(!L.ok)return; const e=S.log.find(x=>x.i===i); const tag=e?.r==="sus"?'<span class="tag ok">Caught</span>':e?.r==="over"?'<span class="tag meh">Wrong ground</span>':'<span class="tag bad">Missed</span>';
+    const li=document.createElement("li"); li.innerHTML=`${tag}<span class="cite">Line ${i+1}</span> “${L.t}”<br><span class="cite">${L.ok.map(k=>GROUNDS[k].name+" "+GROUNDS[k].cite).join(" · ")}</span> — ${L.why}`; rv.appendChild(li); });
+  S.log.filter(x=>x.r==="friv").forEach(e=>{ const li=document.createElement("li"); li.innerHTML=`<span class="tag bad">Frivolous</span><span class="cite">Line ${e.i+1}</span> “${LINES[e.i].t}” — a proper question. You objected on ${GROUNDS[e.k].name.toLowerCase()}.`; rv.appendChild(li); });
+}
+
+// ---------- wiring ----------
+buildGrounds();
+$("begin").onclick=startGame; $("again").onclick=startGame; $("objBtn").onclick=object; $("pauseBtn").onclick=togglePause;
+document.addEventListener("keydown",e=>{ if(!S||S.done)return; if(e.code==="Space"){e.preventDefault();object();} else if(e.key==="Enter"){e.preventDefault();skip();} else if(e.key==="p"||e.key==="P"){togglePause();}
+  if(S.objecting&&e.key>="1"&&e.key<="8"){ rule(Object.keys(GROUNDS)[+e.key-1]); } });
+</script>
+
+</body>
+</html>
