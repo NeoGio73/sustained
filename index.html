@@ -130,17 +130,18 @@ details summary{cursor:pointer;font-family:var(--mono);font-size:.85rem;color:va
   <!-- START -->
   <section id="start" class="sheet">
     <h1>Sustained!</h1>
-    <p>Dependency adjudicatory hearing under Chapter 39. You represent the Mother, Ms. Danielle Reyes. Angela Whitlock of Children's Legal Services is putting on the Department's case, and some of what she offers is improper under the Evidence Code or Chapter 39 itself. Catch it.</p>
+    <p>Dependency adjudicatory hearing under Chapter 39. You are <b>Angela Whitlock</b>, counsel for the State of Florida, Department of Children and Families. You have rested the Department's case. Now Mr. Dalton Pruitt, counsel for the Mother, is cross-examining your witnesses and putting on the Mother's case, and some of what he does is improper under the Evidence Code or Chapter 39. Catch it.</p>
     <div class="brief">
       <div>CASE: In the Interest of M.R., a child (age 7) — Petition for Dependency, § 39.501</div>
       <div>ALLEGATIONS: Inadequate supervision and hazardous home (§ 39.01 neglect); substance misuse by the Mother.</div>
       <div>ORIGIN: Anonymous abuse-hotline report, then a CPI home visit.</div>
       <div>BENCH TRIAL: Judge decides, civil rules of evidence, preponderance standard (§ 39.507(1)(b)). No jury.</div>
+      <div>OPPOSING COUNSEL: Dalton Pruitt, for the Mother, Ms. Danielle Reyes. Confident. Loud. Owns a boat.</div>
       <div>JUDGE: Hon. Marguerite Delacroix. Patience: finite. Lunch: 11:30.</div>
     </div>
     <h2>How it plays</h2>
     <p>Each line of testimony is live for a few seconds. Hit <b>OBJECTION!</b> and pick a ground. The right ground gets <b>Sustained</b> and points. The wrong ground gets <b>Overruled</b> and costs the judge's patience. Objecting to a proper question is frivolous, and the judge remembers. Let bad evidence in and the gallery (the GAL, the case manager, the bailiff) glazes over while the record fills with things you'll regret on appeal.</p>
-    <p>Three sustained in a row and Angela starts to sweat. Keep the judge's patience above zero or you are in contempt.</p>
+    <p>Three sustained in a row and Mr. Pruitt starts to sweat. Remember: leading is fair game on cross, so save that objection for his own witnesses. Keep the judge's patience above zero or you are in contempt.</p>
     <button class="primary" id="begin">Begin Hearing</button>
     <details><summary>The grounds (Fla. Evidence Code Ch. 90 and Ch. 39)</summary><ul class="rules" id="rulesList"></ul></details>
     <p class="hint">A fictional case. Rulings here are a game designer's reading of the statutes, not legal advice.</p>
@@ -194,7 +195,7 @@ details summary{cursor:pointer;font-family:var(--mono);font-size:.85rem;color:va
 
   <!-- END -->
   <section id="end" class="sheet hidden">
-    <h1 id="endTitle">The Department rests.</h1>
+    <h1 id="endTitle">The Mother rests.</h1>
     <div class="grade" id="grade">B</div>
     <p id="verdict"></p>
     <div class="scoreline">
@@ -213,78 +214,73 @@ details summary{cursor:pointer;font-family:var(--mono);font-size:.85rem;color:va
 // ---------- data ----------
 const GROUNDS = {
   hearsay:{name:"Hearsay",cite:"§ 90.801–90.803",desc:"An out-of-court statement offered to prove the truth of the matter asserted, with no exception laid."},
-  childhearsay:{name:"Child Hearsay Predicate",cite:"§ 90.803(23)",desc:"A child's out-of-court statement about abuse or neglect is admissible only after notice to the parties and a reliability finding by the court; the child must testify or be unavailable with corroboration."},
-  anonymous:{name:"Uncorroborated Anonymous Report",cite:"§ 39.507(1)(b)",desc:"Evidence from an anonymous hotline call must be independently corroborated; the call alone cannot support a finding of dependency."},
-  petition:{name:"Beyond the Petition",cite:"§ 39.501(3) / due process",desc:"The Department must prove the facts alleged in the petition; new allegations at the hearing deny the parent notice."},
-  leading:{name:"Leading",cite:"§ 90.612(3)",desc:"On direct examination, a question that suggests its own answer."},
+  reporter:{name:"Reporter Identity Confidential",cite:"§ 39.202",desc:"The identity of the person who made the abuse-hotline report is confidential and may not be disclosed without a court order on the grounds the statute allows."},
+  scope:{name:"Beyond the Scope",cite:"§ 90.612(2)",desc:"Cross-examination is limited to the subject matter of direct and matters of credibility."},
+  leading:{name:"Leading (on direct)",cite:"§ 90.612(3)",desc:"On direct examination of his own witness, counsel can't suggest the answer. Leading is ordinarily allowed on cross, so don't object to it there."},
   relevance:{name:"Relevance / Prejudice",cite:"§ 90.401–90.403",desc:"Not probative of a fact in issue, or unfairly prejudicial."},
   speculation:{name:"Speculation / Opinion",cite:"§ 90.604, 90.701–702",desc:"Calls for a guess, for facts outside personal knowledge, or for an expert opinion from a lay witness."},
   foundation:{name:"Lack of Foundation",cite:"§ 90.901",desc:"Document or testimony not yet authenticated or qualified."},
   argumentative:{name:"Argumentative",cite:"§ 90.612(1)",desc:"Counsel is arguing with the witness rather than asking a question."},
-  asked:{name:"Asked and Answered",cite:"§ 90.612(1)",desc:"The question has already been asked and answered."}
+  asked:{name:"Asked and Answered",cite:"§ 90.612(1)",desc:"The question has already been asked and answered."},
+  compound:{name:"Compound",cite:"§ 90.612(1)",desc:"Several questions bundled into one; the answer can't be clear."}
 };
-const C="Ms. Angela Whitlock (Counsel for the Department, DCF)", W1="Mr. Brandt (Child Protective Investigator)", W2="Mrs. Okafor (Neighbor)", W3="Ms. Alvarez (Dependency Case Manager)";
+
+const P="Mr. Dalton Pruitt (Counsel for the Mother)", W1="Mr. Brandt (Child Protective Investigator, on cross)", W2="Ms. Reyes (The Mother)", W3="Jaylen (Cousin, age 16)", W4="Mr. Haskins (Neighbor)";
 const LINES = [
- {s:C,q:1,t:"Please state your name and position for the record."},
- {s:W1,t:"Tyler Brandt. Child Protective Investigator with the Department of Children and Families, Putnam County."},
- {s:C,q:1,t:"How did this case come to the Department's attention?"},
- {s:W1,t:"An anonymous call to the abuse hotline on June 3rd."},
- {s:C,q:1,t:"And the caller said the Mother leaves M.R. alone every night while she goes out drinking, correct?",ok:["anonymous","hearsay","leading"],why:"The anonymous caller's statement is hearsay, and under § 39.507(1)(b) an anonymous report cannot support a finding without independent corroboration. The tag question is leading besides."},
- {s:C,q:1,t:"Let me ask it this way. After the call, what did you do?"},
- {s:W1,t:"I went to the home on Reid Street in Palatka the next morning, June 4th."},
- {s:C,q:1,t:"What did you observe when you arrived?"},
- {s:W1,t:"The power was off. There was a notice from the utility on the door. The refrigerator was warm and mostly empty. M.R. was home with a teenage cousin."},
- {s:C,q:1,t:"The home was filthy and unfit for a child, wasn't it?",ok:["leading"],why:"On direct, counsel can't supply the characterization and ask the witness to agree. Let the CPI describe what he saw."},
- {s:C,q:1,t:"Describe the condition of the home."},
- {s:W1,t:"Cluttered. Dishes in the sink. I didn't see spoiled food or pests. The child's room had a bed and clean clothes."},
- {s:C,q:1,t:"Was there anything unusual in the home?"},
- {s:W1,t:"An iguana named Steve. Four feet long. He has his own room with a heat lamp, which, candidly, was the only warm room in the house."},
- {s:C,q:1,t:"Isn't it true that Steve the iguana bit you, and that this shows the Mother keeps a dangerous home?",ok:["relevance","leading"],why:"Steve is not alleged in the petition and an iguana bite on a CPI proves nothing about supervision or substance use. It is, however, very funny. Overruled on comedy alone would be reversible error."},
- {s:C,q:1,t:"Did you speak with M.R.?"},
- {s:W1,t:"Yes, in the living room, with the cousin present."},
- {s:C,q:1,t:"What did M.R. tell you about where her mother goes at night?",ok:["childhearsay","hearsay"],why:"A seven-year-old's out-of-court statement about neglect comes in only through § 90.803(23): notice to the parties, a reliability hearing with findings, and the child testifying or being unavailable with corroboration. None of that has happened."},
- {s:C,q:1,t:"Your Honor, we filed notice under 90.803(23) and the Court made reliability findings at the pretrial. Mr. Brandt, what did M.R. tell you?",sw:"The Court confirms its prior 90.803(23) findings. The child's statement is admitted."},
- {s:W1,t:"She said, 'Mommy works at night and Jaylen watches me.' Jaylen is the cousin."},
- {s:C,q:1,t:"Did you ask the Mother to submit to a drug screen?"},
- {s:W1,t:"Yes. She agreed. We did a urine screen on June 4th."},
- {s:C,q:1,t:"I'm handing you what's marked Department's Exhibit 3. What were the results?",ok:["foundation","hearsay"],why:"A lab report has to be authenticated and brought in under the business-records exception (§ 90.803(6)) with a records custodian or certification before anyone reads from it. Counsel skipped that."},
- {s:C,q:1,t:"I'll come back to Exhibit 3 with the lab custodian. Mr. Brandt, based on your conversation with the Mother, is she an alcoholic?",ok:["speculation"],why:"A CPI is not qualified to diagnose a substance use disorder. That is expert opinion under § 90.702 and he has no foundation for it."},
- {s:C,q:1,t:"What did the Mother tell you about her work schedule?"},
- {s:W1,t:"She said she works the overnight shift at the distribution center off Highway 17, 10 p.m. to 6 a.m., four nights a week, and that her nephew Jaylen, who's sixteen, stays with M.R."},
- {s:C,q:1,t:"Did you verify the nephew's age?"},
- {s:W1,t:"Yes. He's sixteen."},
- {s:C,q:1,t:"Isn't it true the Mother was arrested for shoplifting in 2019?",ok:["relevance","petition"],why:"A six-year-old shoplifting arrest has nothing to do with supervision, the home, or substance use, and it's not alleged in the petition. Irrelevant and unfairly prejudicial."},
- {s:C,q:1,t:"Did you also learn that the Mother's boyfriend has a domestic violence injunction against him?",ok:["petition","hearsay"],why:"Domestic violence isn't in the petition. The Mother has no notice of this allegation and can't defend against it today. (And how he 'learned' it is hearsay.)"},
- {s:C,q:1,t:"You've investigated two hundred homes. You know neglect when you see it, and you saw it here, didn't you?",ok:["argumentative","leading"],why:"That's a closing argument dressed as a question, and it leads the witness to the legal conclusion the judge is here to make."},
- {s:C,q:1,t:"Describe the condition of the home.",ok:["asked"],why:"He described it at line 12 (and then told us about Steve): cluttered, dishes, no spoilage, clean clothes. Asking again is an attempt to get a worse answer."},
- {s:C,q:1,t:"Nothing further. The Department calls Grace Okafor.",sw:"Neighbor Grace Okafor is sworn and takes the stand."},
- {s:C,q:1,t:"Mrs. Okafor, how do you know the Reyes family?"},
- {s:W2,t:"I live next door on Reid Street. Eleven years."},
- {s:C,q:1,t:"Have you ever had any disputes with the Reyes household?"},
- {s:W2,t:"The boy plays tuba. At eleven at night. Usually Sousa. I have called the city about it four times and I will do so again."},
- {s:C,q:1,t:"What have you personally observed about M.R.'s supervision?"},
- {s:W2,t:"I see the teenage boy there most nights. Twice this spring I saw M.R. on the porch alone around 9 at night."},
- {s:W2,t:"And the lady at the laundromat says the Mother has men over at all hours.",ok:["hearsay"],why:"The laundromat lady is not here. Her statement is offered for its truth, and no exception fits."},
- {s:C,q:1,t:"When you saw M.R. alone on the porch, where do you think the Mother was?",ok:["speculation"],why:"The witness doesn't know where the Mother was. Asking her to guess is speculation."},
- {s:C,q:1,t:"Did you ever see the power off at the home?"},
- {s:W2,t:"Yes. For about a week in May. They ran an extension cord from my outlet for the refrigerator. I offered."},
- {s:C,q:1,t:"You'd agree that a mother who lets the lights get cut off doesn't care about her child, wouldn't you?",ok:["argumentative","leading"],why:"Badgering a neighbor into counsel's moral conclusion. Argumentative and leading."},
- {s:C,q:1,t:"Nothing further. The Department calls Marisol Alvarez.",sw:"Case Manager Marisol Alvarez is sworn."},
- {s:C,q:1,t:"Ms. Alvarez, what is your role?"},
- {s:W3,t:"Dependency case manager with the community-based care lead agency. I was assigned after the shelter hearing."},
- {s:C,q:1,t:"Has the Mother complied with the case plan tasks?"},
- {s:W3,t:"She completed the parenting class and attended three of four substance abuse evaluation appointments. She missed one for a work shift."},
- {s:C,q:1,t:"Did anything notable happen at your last home visit?"},
- {s:W3,t:"Steve the iguana was wearing a tiny Jaguars jersey. M.R. made it. The home had power. There was food. I noted all of that."},
- {s:C,q:1,t:"My neighbor's cousin is a pharmacist and she says anyone who works nights is probably on something. Would you agree?",ok:["hearsay","speculation"],why:"A pharmacist's cousin's neighbor's hunch is hearsay, and asking the case manager to agree with it is speculation. Angela is reaching."},
- {s:C,q:1,t:"The anonymous caller also reported that the Mother sells pills from the house. Is that consistent with what you've seen?",ok:["anonymous","petition","hearsay"],why:"Another uncorroborated anonymous allegation, not in the petition, offered through a witness who didn't hear it. Three problems in one question."},
- {s:C,q:1,t:"I'm showing you Department's Exhibit 3, the June 4 lab report, with the custodian's certification now filed. Do you recognize it?"},
- {s:W3,t:"Yes. That's the lab's report. It's in the case file."},
- {s:C,q:1,t:"What were the results?"},
- {s:W3,t:"Negative for all substances tested."},
- {s:C,q:1,t:"Has the Mother completed her case plan tasks?",ok:["asked"],why:"She answered that at line 48. Asked and answered."},
- {s:C,q:1,t:"In your opinion, would M.R. be safer in foster care than at home?",ok:["speculation","relevance"],why:"Placement is a disposition question (§ 39.521), not an adjudication question, and the case manager has no foundation to predict future safety. The judge decides dependency on the facts alleged."},
- {s:C,q:1,t:"The Department rests, Your Honor.",end:true}
+ {s:P,q:1,t:"Mr. Brandt, you've been a CPI for how long?"},
+ {s:W1,t:"Three years."},
+ {s:P,q:1,t:"And in three years you've never once removed a child from a home with a working heat lamp, have you?"},
+ {s:W1,t:"I... don't track that, sir."},
+ {s:P,q:1,t:"This whole case started with an anonymous hotline call, didn't it?"},
+ {s:W1,t:"Yes."},
+ {s:P,q:1,t:"Who made that call?",ok:["reporter"],why:"The reporter's identity is confidential under § 39.202. It can't be disclosed on the stand without a court order on the grounds the statute allows."},
+ {s:P,q:1,t:"Fine. Was it Mrs. Okafor? The tuba complainer?",ok:["reporter","asked"],why:"Same question with a name attached. Still confidential, and he's fishing for a yes by elimination."},
+ {s:P,q:1,t:"Let's talk about the home. The power was off, right?"},
+ {s:W1,t:"Yes. There was a utility notice on the door."},
+ {s:P,q:1,t:"And a working refrigerator was running off an extension cord from the neighbor's house, true?"},
+ {s:W1,t:"The neighbor said so. I saw the cord."},
+ {s:P,q:1,t:"So the child had cold food. Steve the iguana had a heat lamp. Everyone was fine. Isn't that right?"},
+ {s:W1,t:"The refrigerator was mostly empty, sir."},
+ {s:P,q:1,t:"Mr. Brandt, do you personally believe the Department removes too many children from poor families?",ok:["relevance","scope"],why:"His opinion on Department policy is irrelevant to whether this child is dependent, and it's outside the scope of direct. (Also a touch argumentative.)"},
+ {s:P,q:1,t:"When you interviewed M.R., what did Jaylen whisper to her right before she answered?",ok:["speculation"],why:"He wasn't in on the whisper. Asking what someone whispered to someone else calls for a guess."},
+ {s:P,q:1,t:"You'd agree the Department rushed this petition because it was the end of the fiscal quarter and somebody needed numbers?",ok:["argumentative","speculation"],why:"That's a speech, not a question, and it asks the CPI to speculate about the Department's motives."},
+ {s:P,q:1,t:"Did the Mother cooperate with your investigation?"},
+ {s:W1,t:"Yes. She agreed to the drug screen. It came back negative."},
+ {s:P,q:1,t:"Nothing further for this witness.",sw:"Mr. Pruitt calls the Mother, Ms. Danielle Reyes. She is sworn."},
+ {s:P,q:1,t:"Ms. Reyes, tell the Court about your work."},
+ {s:W2,t:"I work overnights at the distribution center off Highway 17. Ten to six, four nights a week. It's the only shift that pays enough."},
+ {s:P,q:1,t:"And M.R. is never, ever left alone, because your nephew Jaylen is always there, correct?",ok:["leading"],why:"This is his own witness on direct. He's testifying for her and asking her to nod. Leading."},
+ {s:P,q:1,t:"Let me rephrase. Who is with M.R. while you work?"},
+ {s:W2,t:"My nephew Jaylen. He's sixteen. He stays over the nights I work."},
+ {s:P,q:1,t:"What did M.R. tell you about how she feels when Jaylen babysits?",ok:["hearsay"],why:"The child's out-of-court statement, offered to prove she's well cared for. Section 90.803(23) covers statements describing abuse or neglect; this is plain hearsay with no exception."},
+ {s:P,q:1,t:"Why was the power off in May?"},
+ {s:W2,t:"The bill got behind. I set up a payment plan and it was back on in eight days. Mr. Okafor let us run the fridge off his outlet."},
+ {s:P,q:1,t:"I'm handing you a document. Is this the utility company's letter confirming the power was restored?",ok:["foundation"],why:"A letter from a utility company needs authentication before it's read into the record: who sent it, how she got it, and ideally the business-records predicate."},
+ {s:P,q:1,t:"We'll mark that later. Ms. Reyes, do you drink?"},
+ {s:W2,t:"A beer at the Blue Crab Festival. Once a year. I was working the funnel cake booth."},
+ {s:P,q:1,t:"You're a wonderful mother and the Department knows it, don't they?",ok:["leading","argumentative","speculation"],why:"Leading his own witness to a conclusion, arguing with the Department through her, and asking what the Department knows. A trifecta."},
+ {s:P,q:1,t:"Tell the Court about Steve."},
+ {s:W2,t:"Steve is a four-foot green iguana. M.R. named him. He has a room with a heat lamp because Florida gets cold at night in January and iguanas fall out of trees. We didn't want him falling out of anything."},
+ {s:P,q:1,t:"And you'd never leave M.R. alone with Steve, and Steve has never bitten anyone, and Steve is current on his vet visits, correct?",ok:["compound","leading"],why:"Three questions about Steve, all leading. Which one is the 'correct' for? (Also, Steve has bitten someone. The CPI.)"},
+ {s:P,q:1,t:"Who is with M.R. while you work?",ok:["asked"],why:"She said Jaylen at line 25, right after he rephrased. Asked and answered."},
+ {s:P,q:1,t:"Nothing further.",sw:"Mr. Pruitt calls Jaylen, the Mother's nephew, age 16. The Court confirms he understands the oath."},
+ {s:P,q:1,t:"Jaylen, how often do you stay with M.R.?"},
+ {s:W3,t:"Four nights a week when my aunt works. I do homework, she goes to bed at 8:30, I play tuba till about 11."},
+ {s:P,q:1,t:"Softly, though. You play softly, right?",ok:["leading"],why:"On direct, counsel is supplying the answer he wants. Mrs. Okafor, in the gallery, audibly disagrees."},
+ {s:P,q:1,t:"What does your band director say about your dedication?",ok:["hearsay","relevance"],why:"The band director's opinion is hearsay, and tuba dedication has no bearing on supervision of a seven-year-old."},
+ {s:P,q:1,t:"Has M.R. ever been hurt while you were watching her?"},
+ {s:W3,t:"No. Steve bit a guy once but that was the CPI, not her."},
+ {s:P,q:1,t:"If the Department takes M.R. away, how do you think that will affect her for the rest of her life?",ok:["speculation","relevance"],why:"A sixteen-year-old is being asked to predict a child's lifelong psychological outcome. Speculation, and placement is a disposition question anyway."},
+ {s:P,q:1,t:"Nothing further.",sw:"Mr. Pruitt calls Mr. Haskins, a neighbor from across the street."},
+ {s:P,q:1,t:"Mr. Haskins, how long have you lived on Reid Street?"},
+ {s:W4,t:"Twenty-two years. I've seen everything. I saw the heron thing earlier."},
+ {s:P,q:1,t:"What's your opinion of Ms. Reyes as a mother?"},
+ {s:W4,t:"Good. She's at every school thing. Kid's always clean and fed."},
+ {s:P,q:1,t:"Everybody on the street says Mrs. Okafor made the hotline call because of the tuba. True?",ok:["hearsay","reporter","speculation"],why:"'Everybody says' is hearsay, it's an end-run around reporter confidentiality, and the witness has no personal knowledge of who called."},
+ {s:P,q:1,t:"Mr. Haskins, isn't the real problem here that the Department has nothing better to do in Putnam County?",ok:["argumentative","relevance"],why:"Closing argument through a neighbor. Argumentative and irrelevant."},
+ {s:P,q:1,t:"Have you ever seen M.R. alone outside at night?"},
+ {s:W4,t:"Once, on the porch. Jaylen was inside. I could hear the tuba."},
+ {s:P,q:1,t:"The Mother rests, Your Honor.",end:true}
 ];
 const EVENTS=[
  {t:"The Guardian ad Litem's phone goes off. The ringtone is a Jimmy Buffett song. She does not silence it quickly.",attn:-8,mood:-6,splash:"PHONE",cls:"amber"},
@@ -292,7 +288,7 @@ const EVENTS=[
  {t:"Power outage. The courtroom goes dark. Someone whispers 'at least it's not the Reyes house.' The judge is not amused.",attn:+12,mood:-4,black:true},
  {t:"A great blue heron lands outside the window and stares at the bailiff. The bailiff stares back. Neither blinks.",attn:+10,mood:0,splash:"HERON",cls:"green"},
  {t:"The judge calls a five-minute recess. Coffee is replenished. Hope is restored.",attn:+6,mood:+14,splash:"RECESS",cls:"green"},
- {t:"The court reporter asks Angela to slow down. Angela does not slow down.",attn:-3,mood:-3},
+ {t:"The court reporter asks Mr. Pruitt to slow down. Mr. Pruitt gets louder instead.",attn:-3,mood:-3},
  {t:"A six-foot alligator is reported in the courthouse parking lot. The bailiff leaves to 'handle it.' He is gone a while.",attn:-10,mood:-2,splash:"GATOR",cls:"amber"},
  {t:"The Blue Crab Festival parade passes outside. A marching band plays Sousa. Mrs. Okafor visibly tenses.",attn:+8,mood:-6,splash:"PARADE",cls:"amber"},
  {t:"Steve the iguana has been brought to the courthouse 'in case the Court wishes to see him.' The Court does not.",attn:+14,mood:-8,splash:"STEVE",cls:"green"},
@@ -366,13 +362,13 @@ function object(){ if(S.done||S.decided||S.objecting)return; const L=LINES[S.i];
 function rule(k){ if(!S.objecting)return; const L=LINES[S.i]; S.objecting=false; S.decided=true; $("grounds").classList.add("hidden"); const pen=hungry()?1.5:1;
   if(L.ok&&L.ok.includes(k)){ S.sus++; S.streak++; S.best=Math.max(S.best,S.streak); const mult=1+Math.min(S.streak-1,4)*.25; const pts=Math.round(100*mult); S.score+=pts; setMood(S.mood+6); setAttn(S.attn+8); S.log.push({i:S.i,r:"sus",k});
     beep("gavel"); splash("SUSTAINED",S.streak>=3?"dark":"green"); ruling(`<b>THE COURT:</b> Sustained. <span class="cite">${GROUNDS[k].name}, ${GROUNDS[k].cite}. +${pts}</span>`);
-    if(S.streak===3) setTimeout(()=>{splash("COUNSEL SWEATS","amber"); note("Angela loosens her collar and flips through the petition looking for what she actually alleged.");},1000);
-    if(S.streak===5) setTimeout(()=>{splash("THE COURT IS LISTENING","dark"); note("The judge sets down her pen and looks at Department counsel over her glasses. The GAL is taking notes on your technique.");},1000);
+    if(S.streak===3) setTimeout(()=>{splash("COUNSEL SWEATS","amber"); note("Mr. Pruitt loosens his tie and flips through his legal pad looking for a question that works.");},1000);
+    if(S.streak===5) setTimeout(()=>{splash("THE COURT IS LISTENING","dark"); note("The judge sets down her pen and looks at Mr. Pruitt over her glasses. The GAL is taking notes on your technique.");},1000);
     if(S.streak===3||S.streak===5) setAttn(S.attn+10);
   } else if(L.ok){ S.over++; S.streak=0; setMood(S.mood-12*pen); S.log.push({i:S.i,r:"over",k}); beep("bad"); splash("OVERRULED","dark");
     ruling(`<b>THE COURT:</b> Overruled. <span class="cite">That wasn't ${GROUNDS[k].name.toLowerCase()}. It was ${GROUNDS[L.ok[0]].name.toLowerCase()} (${GROUNDS[L.ok[0]].cite}). The answer stands.</span>`);
   } else { S.friv++; S.streak=0; setMood(S.mood-16*pen); setAttn(S.attn-4); S.log.push({i:S.i,r:"friv",k}); beep("bad"); splash("OVERRULED","dark");
-    const snark=["Counsel, that was a question. Those are allowed.","Overruled. Counsel, I'm going to start charging you for these.","Overruled. Sit down, counsel.","Overruled. The witness may answer, and counsel may reflect.","Overruled. Counsel, Steve the iguana has shown more restraint today than you have.","Overruled. Ms. Whitlock, please continue. Counsel, please don't."];
+    const snark=["Counsel, that was a question. Those are allowed.","Overruled. Counsel, I'm going to start charging you for these.","Overruled. Sit down, counsel.","Overruled. The witness may answer, and counsel may reflect.","Overruled. Ms. Whitlock, Steve the iguana has shown more restraint today than you have.","Overruled. Mr. Pruitt, please continue. Ms. Whitlock, please don't."];
     ruling(`<b>THE COURT:</b> ${snark[S.friv%snark.length]}`); }
   stats(); setTimeout(advance,2200); }
 
@@ -382,9 +378,9 @@ function skip(){ if(S.done||S.objecting||S.paused)return; if(!S.decided){ clearT
 function endGame(contempt){ if(S.done)return; S.done=true; clearTimeout(timerId); $("game").classList.add("hidden"); $("end").classList.remove("hidden");
   const total=LINES.filter(l=>l.ok).length; const acc=S.sus/total;
   let grade="F",v="";
-  if(contempt){ grade="CONTEMPT"; v="The judge has had enough. Bailiff, remove counsel. Your client now has a new lawyer and you have a letter from the Florida Bar."; $("endTitle").textContent="Held in contempt."; }
-  else { $("endTitle").textContent="The Department rests."; grade=acc>=.9&&S.friv<=1?"A":acc>=.75?"B":acc>=.55?"C":acc>=.35?"D":"F";
-    v={A:"The Court finds the Department has not met its burden by a preponderance and dismisses the petition. CLS counsel asks if you'd consider coming over to the Department. You decline, graciously.",B:"A clean record. A few things got in, but the Court weighs them lightly and your appellate issues are preserved.",C:"Serviceable. The judge heard several things she shouldn't have, and noticed your guesswork. Adjudication is a coin flip.",D:"The record is a mess. The child is adjudicated dependent largely on hearsay you never challenged. CLS sends you a fruit basket.",F:"You objected to the witness's name. The GAL has filed a motion to have you replaced."}[grade]; }
+  if(contempt){ grade="CONTEMPT"; v="The judge has had enough. Bailiff, remove counsel. The Department now has a new lawyer on this case and you have a letter from the Florida Bar."; $("endTitle").textContent="Held in contempt."; }
+  else { $("endTitle").textContent="The Mother rests."; grade=acc>=.9&&S.friv<=1?"A":acc>=.75?"B":acc>=.55?"C":acc>=.35?"D":"F";
+    v={A:"A spotless record. The Court finds the Department met its burden by a preponderance and adjudicates M.R. dependent, with reunification as the goal and Steve's housing noted with approval. Mr. Pruitt asks if you've ever considered private practice. You have not.",B:"A clean record. A few things got in, but the Court weighs them lightly and the Department's findings are well supported.",C:"Serviceable. The judge heard several things she shouldn't have and noticed your guesswork. The ruling could go either way, and the appeal will be interesting.",D:"The record is a mess. Mr. Pruitt got half the neighborhood's opinions in unchallenged and the Court dismisses the petition. He sends you a fruit basket.",F:"You objected to the witness's name and to leading questions on cross. Your supervisor at CLS would like a word."}[grade]; }
   $("grade").textContent=grade; $("verdict").textContent=v; $("fScore").textContent=S.score; $("fSus").textContent=S.sus; $("fOver").textContent=S.over; $("fFriv").textContent=S.friv; $("fMiss").textContent=S.miss;
   const rv=$("review"); rv.innerHTML="";
   LINES.forEach((L,i)=>{ if(!L.ok)return; const e=S.log.find(x=>x.i===i); const tag=e?.r==="sus"?'<span class="tag ok">Caught</span>':e?.r==="over"?'<span class="tag meh">Wrong ground</span>':'<span class="tag bad">Missed</span>';
